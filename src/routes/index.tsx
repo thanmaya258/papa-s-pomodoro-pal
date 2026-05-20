@@ -1,26 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Pomodoro } from "@/components/Pomodoro";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: Pomodoro,
+  head: () => ({
+    meta: [
+      { title: "Dad's Tomato Timer — Pomodoro" },
+      { name: "description", content: "A warm, friendly Pomodoro timer with a tomato visualization for focused work and gentle breaks." },
+    ],
+  }),
 });
-
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
-
-function Index() {
-  return <PlaceholderIndex />;
-}
