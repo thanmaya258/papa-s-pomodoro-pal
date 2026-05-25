@@ -4,7 +4,8 @@ interface TomatoProps {
 }
 
 export function Tomato({ progress, mode }: TomatoProps) {
-  const fillY = 100 - progress * 100;
+  // fill rises from bottom (y=200) to top (y=0) as progress grows
+  const fillTop = 200 - progress * 200;
   const isBreak = mode === "break";
 
   return (
@@ -14,31 +15,67 @@ export function Tomato({ progress, mode }: TomatoProps) {
           <clipPath id="tomatoShape">
             <path d="M100 40 C 55 40, 25 75, 25 120 C 25 165, 60 190, 100 190 C 140 190, 175 165, 175 120 C 175 75, 145 40, 100 40 Z" />
           </clipPath>
-          <radialGradient id="skin" cx="40%" cy="35%" r="75%">
-            <stop offset="0%" stopColor="oklch(0.78 0.18 30)" />
-            <stop offset="60%" stopColor="oklch(0.62 0.22 27)" />
-            <stop offset="100%" stopColor="oklch(0.45 0.2 25)" />
+
+          {/* Lucid red liquid gradient (translucent, glossy) */}
+          <linearGradient id="liquidGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="oklch(0.78 0.22 28)" stopOpacity="0.85" />
+            <stop offset="40%" stopColor="oklch(0.62 0.24 27)" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="oklch(0.42 0.2 25)" stopOpacity="1" />
+          </linearGradient>
+
+          {/* Empty tomato tint (faint cream/pink) */}
+          <radialGradient id="emptyGrad" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stopColor="oklch(0.96 0.04 35)" />
+            <stop offset="100%" stopColor="oklch(0.88 0.06 30)" />
           </radialGradient>
-          <radialGradient id="fillGrad" cx="50%" cy="100%" r="100%">
-            <stop offset="0%" stopColor="oklch(0.72 0.22 30)" />
-            <stop offset="100%" stopColor="oklch(0.55 0.22 25)" />
-          </radialGradient>
+
+          {/* Two wave paths for layered liquid surface */}
+          <path
+            id="wave1"
+            d="M-100 10 Q -75 0 -50 10 T 0 10 T 50 10 T 100 10 T 150 10 T 200 10 T 250 10 T 300 10 V 220 H -100 Z"
+          />
+          <path
+            id="wave2"
+            d="M-100 10 Q -75 20 -50 10 T 0 10 T 50 10 T 100 10 T 150 10 T 200 10 T 250 10 T 300 10 V 220 H -100 Z"
+          />
         </defs>
 
-        {/* tomato body (faded background) */}
+        {/* Tomato body */}
         <g clipPath="url(#tomatoShape)">
-          <rect width="200" height="200" fill="oklch(0.92 0.04 30)" />
-          {/* animated fill */}
-          <rect
-            x="0"
-            width="200"
-            y={fillY * 2}
-            height={400}
-            fill="url(#fillGrad)"
-            style={{ transition: "y 1s linear" }}
-          />
-          {/* highlight */}
-          <ellipse cx="70" cy="80" rx="22" ry="32" fill="white" opacity="0.18" />
+          {/* empty interior */}
+          <rect width="200" height="200" fill="url(#emptyGrad)" />
+
+          {/* Liquid layer with animated translation for smooth rise */}
+          <g style={{ transform: `translateY(${fillTop}px)`, transition: "transform 1s linear" }}>
+            {/* back wave */}
+            <use href="#wave2" fill="url(#liquidGrad)" opacity="0.55">
+              <animateTransform
+                attributeName="transform"
+                type="translate"
+                from="-100 0"
+                to="0 0"
+                dur="5s"
+                repeatCount="indefinite"
+              />
+            </use>
+            {/* front wave */}
+            <use href="#wave1" fill="url(#liquidGrad)">
+              <animateTransform
+                attributeName="transform"
+                type="translate"
+                from="0 0"
+                to="-100 0"
+                dur="3.5s"
+                repeatCount="indefinite"
+              />
+            </use>
+            {/* subtle shimmer on surface */}
+            <ellipse cx="80" cy="14" rx="30" ry="3" fill="white" opacity="0.25" />
+          </g>
+
+          {/* glassy highlight on tomato skin */}
+          <ellipse cx="70" cy="80" rx="22" ry="34" fill="white" opacity="0.16" />
+          <ellipse cx="140" cy="160" rx="18" ry="10" fill="white" opacity="0.08" />
         </g>
 
         {/* outline */}
