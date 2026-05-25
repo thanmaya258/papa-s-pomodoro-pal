@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Tomato } from "./Tomato";
+import { Notepad } from "./Notepad";
 
 type Mode = "work" | "break";
+type Tab = Mode | "note";
 
 const DURATIONS: Record<Mode, number> = {
   work: 25 * 60,
   break: 5 * 60,
 };
 
-const LABELS: Record<Mode, string> = {
+const LABELS: Record<Tab, string> = {
   work: "Focus time",
   break: "Take a break",
+  note: "Take a note",
 };
 
 function format(seconds: number) {
@@ -36,6 +39,7 @@ function chime() {
 }
 
 export function Pomodoro() {
+  const [tab, setTab] = useState<Tab>("work");
   const [mode, setMode] = useState<Mode>("work");
   const [remaining, setRemaining] = useState(DURATIONS.work);
   const [running, setRunning] = useState(false);
@@ -58,24 +62,36 @@ export function Pomodoro() {
     if (mode === "work") {
       setCompleted((c) => c + 1);
       setMode("break");
+      setTab((t) => (t === "note" ? t : "break"));
       setRemaining(DURATIONS.break);
     } else {
       setMode("work");
+      setTab((t) => (t === "note" ? t : "work"));
       setRemaining(DURATIONS.work);
     }
   }, [remaining, mode]);
 
   useEffect(() => {
-    document.title = `${format(remaining)} · ${LABELS[mode]}`;
-  }, [remaining, mode]);
+    document.title =
+      tab === "note"
+        ? `Notes · Dad's Tomato Timer`
+        : `${format(remaining)} · ${LABELS[mode]}`;
+  }, [remaining, mode, tab]);
 
   const progress = 1 - remaining / DURATIONS[mode];
 
-  const switchMode = (next: Mode) => {
-    setMode(next);
-    setRemaining(DURATIONS[next]);
-    setRunning(false);
+  const selectTab = (next: Tab) => {
+    setTab(next);
+    if (next !== "note") {
+      setMode(next);
+      setRemaining(DURATIONS[next]);
+      setRunning(false);
+    } else {
+      setRunning(false);
+    }
   };
+
+  const showTimer = tab !== "note";
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
@@ -87,63 +103,72 @@ export function Pomodoro() {
         </p>
       </header>
 
-      <div className="flex gap-2 mb-8 bg-card border border-border rounded-full p-1 shadow-sm">
-        {(["work", "break"] as Mode[]).map((m) => (
+      <div className="flex gap-2 mb-8 bg-cream border border-border rounded-full p-1 shadow-sm">
+        {(["work", "break", "note"] as Tab[]).map((t) => (
           <button
-            key={m}
-            onClick={() => switchMode(m)}
+            key={t}
+            onClick={() => selectTab(t)}
             className={`px-5 py-2 rounded-full text-sm font-medium transition ${
-              mode === m
+              tab === t
                 ? "bg-tomato text-primary-foreground shadow"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {LABELS[m]}
+            {LABELS[t]}
           </button>
         ))}
       </div>
 
-      <Tomato progress={progress} mode={mode} />
+      {showTimer ? (
+        <>
+          <Tomato progress={progress} mode={mode} />
 
-      <div className="mt-8 text-center">
-        <div className="font-display text-7xl md:text-8xl tabular-nums text-tomato-deep">
-          {format(remaining)}
-        </div>
-        <p className="mt-2 text-muted-foreground">
-          {mode === "work" ? "Stay with one task until the timer rings." : "Stand up, stretch, look far away."}
-        </p>
-      </div>
+          <div className="mt-8 text-center">
+            <div className="font-display text-7xl md:text-8xl tabular-nums text-tomato-deep">
+              {format(remaining)}
+            </div>
+            <p className="mt-2 text-muted-foreground">
+              {mode === "work"
+                ? "Stay with one task until the timer rings."
+                : "Stand up, stretch, look far away."}
+            </p>
+          </div>
 
-      <div className="mt-8 flex gap-3">
-        <button
-          onClick={() => setRunning((r) => !r)}
-          className="px-8 py-3 rounded-full bg-tomato text-primary-foreground font-medium shadow-lg shadow-tomato/30 hover:scale-105 transition"
-        >
-          {running ? "Pause" : "Start"}
-        </button>
-        <button
-          onClick={() => {
-            setRunning(false);
-            setRemaining(DURATIONS[mode]);
-          }}
-          className="px-8 py-3 rounded-full bg-card border border-border text-foreground font-medium hover:bg-accent transition"
-        >
-          Reset
-        </button>
-      </div>
+          <div className="mt-8 flex gap-3">
+            <button
+              onClick={() => setRunning((r) => !r)}
+              className="px-8 py-3 rounded-full bg-tomato text-primary-foreground font-medium shadow-lg shadow-tomato/30 hover:scale-105 transition"
+            >
+              {running ? "Pause" : "Start"}
+            </button>
+            <button
+              onClick={() => {
+                setRunning(false);
+                setRemaining(DURATIONS[mode]);
+              }}
+              className="px-8 py-3 rounded-full bg-card border border-border text-foreground font-medium hover:bg-accent transition"
+            >
+              Reset
+            </button>
+          </div>
 
-      <div className="mt-10 flex items-center gap-3 text-sm text-muted-foreground">
-        <span>Completed today:</span>
-        <div className="flex gap-1">
-          {Array.from({ length: Math.max(completed, 4) }).map((_, i) => (
-            <span
-              key={i}
-              className={`w-3 h-3 rounded-full ${i < completed ? "bg-tomato" : "bg-border"}`}
-            />
-          ))}
-        </div>
-        <span className="font-medium text-foreground">{completed}</span>
-      </div>
+          <div className="mt-10 flex items-center gap-3 text-sm text-muted-foreground">
+            <span>Completed today:</span>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.max(completed, 4) }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`w-3 h-3 rounded-full ${i < completed ? "bg-tomato" : "bg-border"}`}
+                />
+              ))}
+            </div>
+            <span className="font-medium text-foreground">{completed}</span>
+          </div>
+        </>
+      ) : (
+        <Notepad />
+      )}
     </main>
   );
 }
+
