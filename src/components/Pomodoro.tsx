@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Tomato } from "./Tomato";
+import { Notepad } from "./Notepad";
 
 type Mode = "work" | "break";
+type Tab = Mode | "note";
 
 const DURATIONS: Record<Mode, number> = {
   work: 25 * 60,
   break: 5 * 60,
 };
 
-const LABELS: Record<Mode, string> = {
+const LABELS: Record<Tab, string> = {
   work: "Focus time",
   break: "Take a break",
+  note: "Take a note",
 };
 
 function format(seconds: number) {
